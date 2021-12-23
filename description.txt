@@ -1,0 +1,2 @@
+What I hope to achieve is a mod that tracks damage done to each boss encounter with an interface that 
+shows the individual players damage, and the damage done by different teams

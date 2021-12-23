@@ -1,0 +1,8 @@
+1. bind an interface to a button for the dmg tracking
+1.1 let ppl reset damage in the interface
+1.2 auto reset when a new boss spawns/dies (make this toggleable)
+2. track each persons dmg individually BY FORCE (dont want people to have to opt in cuz thats annoying to do)
+3. track events and bosses, anything with a health bar
+4. have a list of monsters that spawn from each boss, cuz you'd want to track dmg done to minions/spawns from the boss, and not other mobs
+5. have global a key:value thing of players : total damage
+5.1 have a per-boss key:value thing of players : damage to boss

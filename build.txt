@@ -1,0 +1,3 @@
+displayName = Damage Tracker
+author = Toupin
+version = 0.1
