@@ -18,12 +18,20 @@ namespace ToupinPlayer
         public long[] PlayerDamageLaps;
         public DamageTrackerMod dt = DamageTrackerMod.Instance;
 
-
         public override void ProcessTriggers(TriggersSet triggersSet) {
+            if (DamageTrackerMod.SpawnKingSlimeHotkey.JustPressed) {
+                int slimeID = NPCID.KingSlime;
+                NPC.NewNPC((int)player.Bottom.X, (int)player.Bottom.Y, slimeID);
+            }
             if (DamageTrackerMod.ToggleUIHotkey.JustPressed) {
-                dt.myInterface.IsVisible = !dt.myInterface.IsVisible;
-                Main.NewText("flippy dippy woo");
-                    //Main.NewText(dt.ShowMyUI());
+                if (dt.dtInterface.CurrentState == null) { 
+                    dt.ShowMyUI();
+                    dt.dtUIState.changeText("WE HAVE TEXT");
+                }
+                else
+                {
+                    dt.HideMyUI();
+                }
             }
                 base.ProcessTriggers(triggersSet);
         }

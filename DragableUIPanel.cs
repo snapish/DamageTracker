@@ -15,6 +15,7 @@ namespace Interfaces
 		// Stores the offset from the top left of the UIPanel while dragging.
 		private Vector2 offset;
 		public bool dragging;
+		public UIText displayText = new UIText("Damage Tracker");
 
 		public override void MouseDown(UIMouseEvent evt) {
 			base.MouseDown(evt);

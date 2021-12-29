@@ -6,15 +6,16 @@ using Terraria.UI;
 using DamageTracker.UI;
 using Terraria.GameInput;
 
+
 namespace DamageTracker
 {
     public class DamageTrackerMod : Mod
     {
- 
-        internal DamageTrackerUI damageTrackerUI;
-        public UserInterface myInterface;
+        internal UserInterface dtInterface;
+        public DamageTrackerUI dtUIState;
         private GameTime _lastUpdateUiGameTime;
         public static ModHotKey ToggleUIHotkey;
+        public static ModHotKey SpawnKingSlimeHotkey;
         public static DamageTrackerMod Instance => ModContent.GetInstance<DamageTrackerMod>();
         public Mod mod;
 
@@ -22,50 +23,31 @@ namespace DamageTracker
         public override void Load()
         {
             ToggleUIHotkey = RegisterHotKey("Open Main Interface", "P");
+            SpawnKingSlimeHotkey = RegisterHotKey("DEBUG: Spawn King Slime", "G");
             // this makes sure that the UI doesn't get opened on the server
             // the server can't see UI, can it? it's just a command prompt
             if (!Main.dedServ)
             {   
-                myInterface = new UserInterface(); // the thing that actually gets passed to terraria
-                damageTrackerUI = new DamageTrackerUI(); //what you modify and feed to myInterface 
-                damageTrackerUI.Activate(); //initialize the UI element and all its children 
+                Logger.Info("Loading mod");
+                dtInterface = new UserInterface();
+                dtUIState = new DamageTrackerUI();
+                dtUIState.Activate(); //calls initialize, then all child initializations
             }
-        }
-
-
-        public override void Unload()
-        {
-            ToggleUIHotkey = null;
-            damageTrackerUI = null;
-            base.Unload();
         }
         public override void UpdateUI(GameTime gameTime)
         {
             _lastUpdateUiGameTime = gameTime;
-            // it will only draw if the player is not on the main menu
-            if (myInterface?.CurrentState != null && !Main.gameMenu && DamageTrackerUI.visible)
-            {
-                myInterface?.Update(gameTime);
-            }
+            if (dtInterface?.CurrentState != null) {
+                dtInterface.Update(gameTime);
+             }
+            base.UpdateUI(gameTime);
         }
-
-        public override void ModifyInterfaceLayers(List<GameInterfaceLayer> layers)
+        public override void Unload()
         {
-            int mouseTextIndex = layers.FindIndex(layer => layer.Name.Equals("Vanilla: Mouse Text"));
-            if (mouseTextIndex != -1)
-            {
-                layers.Insert(mouseTextIndex, new LegacyGameInterfaceLayer("DamageTracker: myInterface",
-                    delegate
-                    {
-                        if (_lastUpdateUiGameTime != null && myInterface?.CurrentState != null)
-                        {
-                            myInterface.Draw(Main.spriteBatch, _lastUpdateUiGameTime);
-                        }
-                        return true;
-                    },
-                       InterfaceScaleType.UI));
-            }
-            
+            dtUIState = null;
+            ToggleUIHotkey = null;
+            SpawnKingSlimeHotkey = null;
+            base.Unload();
         }
 
         public static bool IsBossAlive()
@@ -81,7 +63,7 @@ namespace DamageTracker
         {
             long cumulitiveHp = 0;
             var TotalHP = new Dictionary<string, long>();
-            foreach(Terraria.NPC npc in Main.npc)
+            foreach(NPC npc in Main.npc)
             {
                 if(npc.active && npc.boss)
                 {
@@ -97,21 +79,40 @@ namespace DamageTracker
             }
             return TotalHP;
         }
-
-
-        public string ShowMyUI()
+        public override void ModifyInterfaceLayers(List<GameInterfaceLayer> layers)
         {
-            Main.NewText("attempting to show ui");
-            myInterface.IsVisible = true;
-            return "showing ui";
+            int mouseTextIndex = layers.FindIndex(layer => layer.Name.Equals("Vanilla: Mouse Text"));
+            if (mouseTextIndex != -1)
+            {
+                layers.Insert(mouseTextIndex, new LegacyGameInterfaceLayer(
+                    "MyMod: MyInterface",
+                    delegate
+                    {
+                        if (_lastUpdateUiGameTime != null && dtInterface?.CurrentState != null)
+                        {
+                            dtInterface.Draw(Main.spriteBatch, _lastUpdateUiGameTime);
+                        }
+                        return true;
+                    },
+                       InterfaceScaleType.UI));
+            }
+            base.ModifyInterfaceLayers(layers);
         }
 
-        public string HideMyUI()
+        internal void ShowMyUI()
         {
+            
+            NPC mynpc = new NPC();
+            Logger.Info("Showing UI");
+            dtInterface?.SetState(dtUIState);
+        }
 
-            myInterface.IsVisible = false;
-            return "hiding ui";
+        internal void HideMyUI()
+        {
+            Logger.Info("Hiding UI");
+            dtInterface?.SetState(null);
         }
 
     }
+
 }
