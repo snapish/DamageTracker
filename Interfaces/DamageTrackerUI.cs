@@ -40,7 +40,6 @@ namespace DamageTracker.UI
             base.Update(gameTime);
         }
         public void changeText(string newText) {
-
             mainPanel.displayText.SetText(newText);
             Append(mainPanel.displayText);
         }

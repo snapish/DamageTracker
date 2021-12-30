@@ -23,10 +23,9 @@ namespace DamageTracker.NPCs
     public class DTNpc : GlobalNPC {
         public override void NPCLoot(NPC npc) {
             if (npc.boss) {
-                Main.NewText("Boss just died woah");
-            } else {
-                Main.NewText("Non boss died sadge");
-            }
+                
+                Main.NewText(npc.FullName +" died, expected " + npc.lifeMax);
+            } 
             base.NPCLoot(npc);
         }
 

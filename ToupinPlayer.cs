@@ -26,7 +26,6 @@ namespace ToupinPlayer
             if (DamageTrackerMod.ToggleUIHotkey.JustPressed) {
                 if (dt.dtInterface.CurrentState == null) { 
                     dt.ShowMyUI();
-                    dt.dtUIState.changeText("WE HAVE TEXT");
                 }
                 else
                 {
@@ -35,27 +34,39 @@ namespace ToupinPlayer
             }
                 base.ProcessTriggers(triggersSet);
         }
-        //this hook is getting called when ANYTHING damages with a projectile, idk if thats inefficient or not
-        public override void ModifyHitNPCWithProj(Projectile proj, Terraria.NPC target, ref int damage, ref float knockback, ref bool crit, ref int hitDirection)
-        {
-            if (target != null && target.boss) //target is valid and is boss
-            {
-                LapDamage += damage; 
-                PlayerTotalDamage += damage;
+        public override void OnHitNPC(Item item, NPC target, int damage, float knockback, bool crit) {
+            if (target != null && target.boss) {  //target is valid and is boss
+                int realDamage = NegativeDamageFix(target, damage);
+                LapDamage += realDamage;
+                PlayerTotalDamage += realDamage;
                 if (damages.ContainsKey(target.FullName)) { //if you have done damage to the boss
-                    damages[target.FullName] += damage;
+                    damages[target.FullName] += realDamage;
+                } else //if you havent done dmg to the boss yet
+                  {
+                    damages.Add(target.FullName, realDamage);
                 }
-                else //if you havent done dmg to the boss yet
-                {
-                    
-                    damages.Add(target.FullName, damage);
-                }
-                AddLapDamage(damage);
-                
+                AddLapDamage(realDamage);
+                dt.dtUIState.changeText(LapDamageString());
+
             }
-                base.ModifyHitNPCWithProj(proj, target, ref damage, ref knockback, ref crit, ref hitDirection);
+            base.OnHitNPC(item, target, damage, knockback, crit);
         }
 
+        public string LapDamageString() {
+            string concat = "";
+            for (int i = 0; i < LapNumber; i++) {
+                concat = string.Format("Damage Lap {0}: {1}", i + 1, PlayerDamageLaps[i] + "\n--------\n");
+            }
+
+            return concat;
+        }
+        public int NegativeDamageFix(NPC npc, int damage) {
+            if(npc.life - damage < 0) {
+                return damage - (npc.life - damage);
+            }
+            return damage;
+
+        }
         public void AddLapDamage(long dmg) {
             if (PlayerDamageLaps.ContainsKey(LapNumber)) {
                 PlayerDamageLaps[LapNumber] += dmg;
