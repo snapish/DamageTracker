@@ -16,6 +16,7 @@ namespace DamageTracker
         private GameTime _lastUpdateUiGameTime;
         public static ModHotKey ToggleUIHotkey;
         public static ModHotKey SpawnKingSlimeHotkey;
+        public ToupinPlayer tp;
         public static DamageTrackerMod Instance => ModContent.GetInstance<DamageTrackerMod>();
         public Mod mod;
 

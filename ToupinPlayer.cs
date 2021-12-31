@@ -7,15 +7,16 @@ using Terraria.ModLoader;
 using DamageTracker;
 using Terraria.Chat;
 
-namespace ToupinPlayer
+namespace DamageTracker
 {
     public class ToupinPlayer : ModPlayer
     {
         public long PlayerTotalDamage;
         public int LapNumber;
-        public long LapDamage; 
-        public Dictionary<string, long> damages = new Dictionary<string, long>(); // key: boss name, value: dmg. for if multiple bosses are spawned, or bosses minions
-        public Dictionary<int, long> PlayerDamageLaps = new Dictionary<int, long>(); //storing the individual laps damage
+        public long LapDamage;
+        public List<long> damageHistory = new List<long>();
+        public static Dictionary<string, long> damages = new Dictionary<string, long>(); // key: boss name, value: dmg. for if multiple bosses are spawned, or bosses minions
+        public static Dictionary<int, long> PlayerDamageLaps = new Dictionary<int, long>(); //storing the individual laps damage
         public DamageTrackerMod dt = DamageTrackerMod.Instance;
 
         public override void ProcessTriggers(TriggersSet triggersSet) {
@@ -34,38 +35,50 @@ namespace ToupinPlayer
             }
                 base.ProcessTriggers(triggersSet);
         }
+        public override void OnHitNPCWithProj(Projectile proj, NPC target, int damage, float knockback, bool crit) {
+            TrackDamage(target, damage);
+            base.OnHitNPCWithProj(proj, target, damage, knockback, crit);
+        }
         public override void OnHitNPC(Item item, NPC target, int damage, float knockback, bool crit) {
+            TrackDamage(target, damage);
+            base.OnHitNPC(item, target, damage, knockback, crit);
+        }
+        public void TrackDamage(NPC target, int damage) {
             if (target != null && target.boss) {  //target is valid and is boss
                 int realDamage = NegativeDamageFix(target, damage);
                 LapDamage += realDamage;
                 PlayerTotalDamage += realDamage;
-                if (damages.ContainsKey(target.FullName)) { //if you have done damage to the boss
-                    damages[target.FullName] += realDamage;
-                } else //if you havent done dmg to the boss yet
-                  {
-                    damages.Add(target.FullName, realDamage);
-                }
+                AddDamages(target, realDamage);
+                damageHistory.Add(realDamage);
                 AddLapDamage(realDamage);
-                dt.dtUIState.changeText(LapDamageString());
+                string lds = LapDamageString();
+                dt.dtUIState.changeText(lds);
 
+            Main.NewText(string.Format("Did <{0}> damage...{1}/{2}...Total: {3}", damage, target.life, target.lifeMax, PlayerTotalDamage)); //i think there's index problem, first hit shows as 0 dmg
             }
-            base.OnHitNPC(item, target, damage, knockback, crit);
         }
-
         public string LapDamageString() {
             string concat = "";
-            for (int i = 0; i < LapNumber; i++) {
-                concat = string.Format("Damage Lap {0}: {1}", i + 1, PlayerDamageLaps[i] + "\n--------\n");
+            for (int i = 0; i < LapNumber+1; i++) {
+                concat = string.Format("\n\n\nDamage Lap {0}: {1}", i + 1, PlayerDamageLaps[i] + "\n--------\n");
             }
 
             return concat;
         }
         public int NegativeDamageFix(NPC npc, int damage) {
             if(npc.life - damage < 0) {
-                return damage - (npc.life - damage);
+                return damage + (npc.life - damage); 
             }
             return damage;
 
+        }
+        public void AddDamages(NPC target, int damage) {
+            if (damages.ContainsKey(target.FullName)) { //if you have done damage to the boss
+                damages[target.FullName] += damage;
+            } else //if you havent done dmg to the boss yet
+              {
+                damages.Add(target.FullName, damage);
+            }
         }
         public void AddLapDamage(long dmg) {
             if (PlayerDamageLaps.ContainsKey(LapNumber)) {

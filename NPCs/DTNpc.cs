@@ -21,10 +21,12 @@ namespace DamageTracker.NPCs
         }
     }
     public class DTNpc : GlobalNPC {
+
         public override void NPCLoot(NPC npc) {
-            if (npc.boss) {
-                
-                Main.NewText(npc.FullName +" died, expected " + npc.lifeMax);
+
+            if (npc.boss && ToupinPlayer.damages.ContainsKey(npc.FullName)) {
+                Main.NewText("You did " + string.Format("{0:n0}", ToupinPlayer.damages[npc.FullName]) + " to " + npc.FullName);
+                ToupinPlayer.damages[npc.FullName] = 0;
             } 
             base.NPCLoot(npc);
         }
